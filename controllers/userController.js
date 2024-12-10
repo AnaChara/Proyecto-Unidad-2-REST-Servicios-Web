@@ -1,21 +1,21 @@
+const userService = require('../services/userService');
+
 const User = require('../models/userModel');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 
-// Obtener todos los usuarios
 const getAllUsers = async (req, res) => {
   try {
-    const users = await User.find();
+    const users = await userService.getAllUsers();
     res.json(users);
   } catch (error) {
     res.status(500).json({ message: 'Error al obtener los usuarios', error });
   }
 };
 
-// Obtener un usuario por ID
 const getUserById = async (req, res) => {
   try {
-    const user = await User.findById(req.params.id);
+    const user = await userService.getUserById(req.params.id);
     if (!user) {
       return res.status(404).json({ message: 'Usuario no encontrado' });
     }
@@ -25,9 +25,9 @@ const getUserById = async (req, res) => {
   }
 };
 
-// Crear un nuevo usuario
 const createUser = async (req, res) => {
   const { nombreCompleto, email, password, RFC, direccion, zipCode, telefono, metodoPagoPreferido, facturapi } = req.body;
+  console.log("Usuario creado: ", req.body);
 
   try {
     const existingUser = await User.findOne({ email });
@@ -36,38 +36,21 @@ const createUser = async (req, res) => {
     }
 
     const hashedPassword = await bcrypt.hash(password, 10);
-
-    const newUser = new User({
-      nombreCompleto,
-      email,
-      password: hashedPassword,
-      RFC,
-      direccion,
-      zipCode,
-      telefono,
-      metodoPagoPreferido,
-      facturapi
-    });
-
-    await newUser.save();
+    const newUser = await userService.createUser({nombreCompleto,email,password: hashedPassword,RFC,direccion,zipCode,telefono,metodoPagoPreferido,facturapi});
+    
     res.status(201).json(newUser);
   } catch (error) {
     res.status(400).json({ message: 'Error al crear el usuario', error });
   }
 };
 
-// Actualizar un usuario
 const updateUser = async (req, res) => {
   const { nombreCompleto, email, password, RFC, direccion, zipCode, telefono, metodoPagoPreferido, facturapi } = req.body;
 
   try {
+    const {id} = req.params;
     const hashedPassword = password ? await bcrypt.hash(password, 10) : undefined;
-
-    const updatedUser = await User.findByIdAndUpdate(
-      req.params.id,
-      { nombreCompleto, email, password: hashedPassword, RFC, direccion, zipCode, telefono, metodoPagoPreferido, facturapi },
-      { new: true }
-    );
+    const updatedUser = await userService.updateUser(id,{ nombreCompleto, email, password: hashedPassword, RFC, direccion, zipCode, telefono, metodoPagoPreferido, facturapi });
 
     if (!updatedUser) {
       return res.status(404).json({ message: 'Usuario no encontrado' });
@@ -79,10 +62,10 @@ const updateUser = async (req, res) => {
   }
 };
 
-// Eliminar un usuario
 const deleteUser = async (req, res) => {
   try {
-    const deletedUser = await User.findByIdAndDelete(req.params.id);
+    const {id} = req.params;
+    const deletedUser = await userService.deleteUser(id);
 
     if (!deletedUser) {
       return res.status(404).json({ message: 'Usuario no encontrado' });

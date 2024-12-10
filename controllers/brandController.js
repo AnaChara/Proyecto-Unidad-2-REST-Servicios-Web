@@ -1,72 +1,71 @@
-const Brand = require('../models/brandModel');
+const brandService = require('../services/brandService');
 
-// Obtener todas las marcas
 const getAllBrands = async (req, res) => {
   try {
-    const brands = await Brand.find();
-    res.json(brands);
+    const brands = await brandService.getAllBrands();
+    res.status(200).json(brands);
   } catch (error) {
     res.status(500).json({ message: 'Error al obtener las marcas', error });
   }
 };
 
-// Obtener una marca por ID
 const getBrandById = async (req, res) => {
+  const { id } = req.params;
+  if (!id) {
+    return res.status(400).json({ message: 'ID de marca requerido' });
+  }
   try {
-    const brand = await Brand.findById(req.params.id);
+    const brand = await brandService.getBrandById(id);
     if (!brand) {
-      return res.status(404).json({ message: 'Marca no encontrada' });
+      return res.status(404).json({ message: `Marca con ID: ${_id} no encontrada.` });
     }
-    res.json(brand);
+    res.status(200).json(brand);
   } catch (error) {
     res.status(500).json({ message: 'Error al obtener la marca', error });
   }
 };
 
-// Crear una nueva marca
 const createBrand = async (req, res) => {
   const { name, CountryOrigin, alias } = req.body;
-
+  if (!name || !alias || !CountryOrigin) {
+    return res.status(400).json({ message: 'Todos los campos son obligatorios.' });
+}
   try {
-    const newBrand = new Brand({ name, CountryOrigin, alias });
-    await newBrand.save();
-    res.status(201).json(newBrand);
+    const newBrand = await brandService.createBrand({name, CountryOrigin, alias});
+    res.status(201).json({ message: 'Marca creada exitosamente', newBrand });
   } catch (error) {
-    res.status(400).json({ message: 'Error al crear la marca', error });
+    res.status(500).json({ message: 'Error al crear la marca', error });
   }
 };
 
-// Actualizar una marca
 const updateBrand = async (req, res) => {
-  const { name, CountryOrigin, alias } = req.body;
-
+  const { id } = req.params;
+  const updates = req.body;
+  if (!id) {
+    return res.status(400).json({ message: 'ID de marca requerido' });
+  }
   try {
-    const updatedBrand = await Brand.findByIdAndUpdate(
-      req.params.id,
-      { name, CountryOrigin, alias },
-      { new: true }
-    );
-
+    const updatedBrand = await brandService.updateBrand(id, updates);
     if (!updatedBrand) {
       return res.status(404).json({ message: 'Marca no encontrada' });
     }
-
-    res.json(updatedBrand);
+    res.status(200).json({ message: 'Marca actualizada exitosamente',updatedBrand });
   } catch (error) {
     res.status(400).json({ message: 'Error al actualizar la marca', error });
   }
 };
 
-// Eliminar una marca
 const deleteBrand = async (req, res) => {
+  const { id } = req.params;
+  if (!id) {
+    return res.status(400).json({ message: 'ID de marca requerido' });
+  }
   try {
-    const deletedBrand = await Brand.findByIdAndDelete(req.params.id);
-
+    const deletedBrand = await brandService.deleteBrand(id);
     if (!deletedBrand) {
       return res.status(404).json({ message: 'Marca no encontrada' });
     }
-
-    res.json({ message: 'Marca eliminada exitosamente' });
+    res.status(200).json({ message: 'Marca eliminada exitosamente' });
   } catch (error) {
     res.status(500).json({ message: 'Error al eliminar la marca', error });
   }

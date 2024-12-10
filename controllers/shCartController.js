@@ -1,20 +1,18 @@
-const { shCart, cartItem } = require('../models/shCartModel');
+const shCartService = require('../services/shCartService');
 const Product = require('../models/productModel');
 
-// Obtener todos los carritos
 const getAllCarts = async (req, res) => {
   try {
-    const carts = await shCart.find().populate('productos.product');
+    const carts = await shCartService.getAllCarts();
     res.json(carts);
   } catch (error) {
     res.status(500).json({ message: 'Error al obtener los carritos de compras', error });
   }
 };
 
-// Obtener un carrito por ID
 const getCartById = async (req, res) => {
   try {
-    const cart = await shCart.findById(req.params.id).populate('productos.product');
+    const cart = await shCartService.getShoppingCartById(req.params.id);
     if (!cart) {
       return res.status(404).json({ message: 'Carrito no encontrado' });
     }
@@ -24,51 +22,57 @@ const getCartById = async (req, res) => {
   }
 };
 
-// Crear un nuevo carrito
+const getCartByUserId = async (req, res) => {
+  const {user} = req.params;
+  try {
+    const cart = await shCartService.getShoppingCartByUserId(user);
+    if (!cart) {
+      return res.status(404).json({ message: 'Carrito no encontrado' });
+    }
+    res.json(cart);
+  } catch (error) {
+    res.status(500).json({ message: 'Error al obtener el carrito de compras', error });
+  }
+};
+
 const createCart = async (req, res) => {
-  const { user, productos, subtotal, total, facturapi } = req.body;
+  const { user } = req.body;
 
   try {
-    const newCart = new shCart({
-      user,
-      productos,
-      subtotal: subtotal || 0,
-      total: total || 0,
-      facturapi
-    });
+    const newCart = await shCartService.createShoppingCart({user});
 
-    await newCart.save();
     res.status(201).json(newCart);
   } catch (error) {
     res.status(400).json({ message: 'Error al crear el carrito de compras', error });
   }
 };
 
-// Actualizar un carrito
 const updateCart = async (req, res) => {
   const { productos, subtotal, total, status, facturapi } = req.body;
+  const { id } = req.params;
 
   try {
-    const updatedCart = await shCart.findByIdAndUpdate(
-      req.params.id,
-      { productos, subtotal, total, status, facturapi },
-      { new: true }
-    );
+      const updates = { productos, subtotal, total, status, facturapi };
+      const updatedCart = await shCartService.updateShCart(id, updates);
 
-    if (!updatedCart) {
-      return res.status(404).json({ message: 'Carrito no encontrado' });
-    }
+      if (!updatedCart) {
+          return res.status(404).json({ message: 'Carrito no encontrado' });
+      }
 
-    res.json(updatedCart);
+      res.json(updatedCart);
   } catch (error) {
-    res.status(400).json({ message: 'Error al actualizar el carrito de compras', error });
+      console.error('Error al actualizar carrito:', error);
+      res.status(400).json({
+          message: 'Error al actualizar el carrito de compras',
+          error: error.message || 'Error desconocido',
+      });
   }
 };
 
-// Eliminar un carrito
 const deleteCart = async (req, res) => {
+  const {id} = req.params;
   try {
-    const deletedCart = await shCart.findByIdAndDelete(req.params.id);
+    const deletedCart = await shCartService.delShoppinCart(id);
 
     if (!deletedCart) {
       return res.status(404).json({ message: 'Carrito no encontrado' });
@@ -80,62 +84,67 @@ const deleteCart = async (req, res) => {
   }
 };
 
-// Agregar un ítem al carrito
+
 const addItemToCart = async (req, res) => {
-  const { product, quantity } = req.body;
+  const { id: cartId } = req.params; // ID del carrito desde los parámetros
+  const input = req.body; // Productos a agregar desde el cuerpo de la solicitud
 
   try {
-    const productDetails = await Product.findById(product);
-    if (!productDetails) {
-      return res.status(404).json({ message: 'Producto no encontrado' });
-    }
+      const updatedCart = await shCartService.addItemToCart(cartId, input);
 
-    const newItem = new cartItem({
-      product: productDetails._id,
-      name: productDetails.name,
-      desc: productDetails.desc,
-      price: productDetails.price,
-      category: productDetails.category,
-      quantity
-    });
-
-    const cart = await shCart.findById(req.params.cartId);
-    if (!cart) {
-      return res.status(404).json({ message: 'Carrito no encontrado' });
-    }
-
-    cart.productos.push(newItem);
-    cart.subtotal += newItem.price * quantity;
-    cart.total = cart.subtotal; // Aquí podrías agregar impuestos u otros cálculos
-
-    await cart.save();
-    res.status(201).json(newItem);
+      res.status(200).json({
+          message: 'Productos agregados exitosamente al carrito',
+          cart: updatedCart,
+      });
   } catch (error) {
-    res.status(400).json({ message: 'Error al agregar ítem al carrito', error });
+      console.error('Error al agregar productos al carrito:', error);
+      res.status(400).json({
+          message: 'Error al agregar productos al carrito',
+          error: error.message || 'Error desconocido',
+      });
+  }
+};
+
+const updateCartItem = async (req, res) => {
+  const { id: userId } = req.params;
+  const input = req.body; 
+
+  try {
+      const updatedCart = await shCartService.updateCartItem(userId, input);
+
+      res.status(200).json({
+          message: 'Producto actualizado exitosamente en el carrito.',
+          cart: updatedCart,
+      });
+  } catch (error) {
+      console.error('Error al actualizar producto en el carrito:', error);
+      res.status(400).json({
+          message: 'Error al actualizar producto en el carrito.',
+          error: error.message || 'Error desconocido.',
+      });
   }
 };
 
 // Eliminar un ítem del carrito
 const deleteItemFromCart = async (req, res) => {
+  const { user, id } = req.params; // Asumiendo que los parámetros userId y productId se pasan en la URL
+
   try {
-    const cart = await shCart.findById(req.params.cartId);
-    if (!cart) {
-      return res.status(404).json({ message: 'Carrito no encontrado' });
-    }
-
-    const itemIndex = cart.productos.findIndex(item => item._id.toString() === req.params.itemId);
-    if (itemIndex === -1) {
-      return res.status(404).json({ message: 'Ítem no encontrado en el carrito' });
-    }
-
-    const itemToRemove = cart.productos.splice(itemIndex, 1);
-    cart.subtotal -= itemToRemove[0].price * itemToRemove[0].quantity;
-    cart.total = cart.subtotal;
-
-    await cart.save();
-    res.json({ message: 'Ítem eliminado exitosamente' });
+    const updatedCart = await shCartService.removeItemFromCart(user, id);
+    res.status(200).json(updatedCart);
   } catch (error) {
-    res.status(500).json({ message: 'Error al eliminar el ítem del carrito', error });
+    res.status(400).json({ message: error.message });
+  }
+};
+
+const clearCart = async(req, res) => {
+  const { user } = req.params;
+
+  try {
+    const clearCart = await shCartService.clearCart(user);
+    res.status(200).json(clearCart);
+  }catch (error) {
+    res.status(400).json({ message: error.message });
   }
 };
 
@@ -146,5 +155,8 @@ module.exports = {
   updateCart,
   deleteCart,
   addItemToCart,
-  deleteItemFromCart
+  deleteItemFromCart,
+  getCartByUserId,
+  updateCartItem,
+  clearCart
 };

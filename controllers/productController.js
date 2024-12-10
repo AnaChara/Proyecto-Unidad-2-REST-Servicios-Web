@@ -1,75 +1,71 @@
-const Product = require('../models/productModel');
+const productService = require('../services/productService');
 
-// Obtener todos los productos
 const getAllProducts = async (req, res) => {
   try {
-    const products = await Product.find().populate('brand');
-    res.json(products);
+    const products = await productService.getAllProducts();
+    res.status(200).json(products);
   } catch (error) {
     res.status(500).json({ message: 'Error al obtener los productos', error });
   }
 };
 
-// Obtener un producto por ID
 const getProductById = async (req, res) => {
+  const { id } = req.params;
+  if (!id) {
+    return res.status(400).json({ message: 'ID de producto requerido' });
+  }
   try {
-    const product = await Product.findById(req.params.id).populate('brand');
+    const product = await productService.getProductById(id);
     if (!product) {
       return res.status(404).json({ message: 'Producto no encontrado' });
     }
-    res.json(product);
+    res.status(200).json(product);
   } catch (error) {
     res.status(500).json({ message: 'Error al obtener el producto', error });
   }
 };
 
-// Crear un nuevo producto
 const createProduct = async (req, res) => {
   const { name, desc, price, category, brand, quantity, images, facturapi } = req.body;
-
-  const newProduct = new Product({
-    name, desc, price, category, brand, quantity, images, facturapi
-  });
-
+  if (!name || !desc || !price || !category || !brand || !quantity || !images || !facturapi) {
+    return res.status(400).json({ message: 'Todos los campos son obligatorios.' });
+  }
   try {
-    await newProduct.save();
+    const newProduct = await productService.createProduct({ name, desc, price, category, brand, quantity, images, facturapi });;
     res.status(201).json(newProduct);
   } catch (error) {
     res.status(400).json({ message: 'Error al crear el producto', error });
   }
 };
 
-// Actualizar un producto
 const updateProduct = async (req, res) => {
-  const { name, desc, price, category, brand, quantity, images, facturapi } = req.body;
-
+  const { id } = req.params;
+  if (!id) {
+    return res.status(400).json({ message: 'ID de producto requerido' });
+  }
+  const updates = req.body;
   try {
-    const updatedProduct = await Product.findByIdAndUpdate(
-      req.params.id,
-      { name, desc, price, category, brand, quantity, images, facturapi },
-      { new: true }
-    );
-
+    const updatedProduct = await productService.updateProduct(id, updates);
     if (!updatedProduct) {
       return res.status(404).json({ message: 'Producto no encontrado' });
     }
-
-    res.json(updatedProduct);
+    res.status(200).json(updatedProduct);
   } catch (error) {
     res.status(400).json({ message: 'Error al actualizar el producto', error });
   }
 };
 
-// Eliminar un producto
 const deleteProduct = async (req, res) => {
+  const { id } = req.params;
+  if (!id) {
+    return res.status(400).json({ message: 'ID de producto requerido' });
+  }
   try {
-    const deletedProduct = await Product.findByIdAndDelete(req.params.id);
-
+    const deletedProduct = await productService.deleteProduct(id);
     if (!deletedProduct) {
       return res.status(404).json({ message: 'Producto no encontrado' });
     }
-
-    res.json({ message: 'Producto eliminado exitosamente' });
+    res.status(200).json({ message: 'Producto eliminado exitosamente' });
   } catch (error) {
     res.status(500).json({ message: 'Error al eliminar el producto', error });
   }
