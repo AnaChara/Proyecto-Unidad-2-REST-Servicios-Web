@@ -11,6 +11,5 @@ router.delete('/:id', brandController.deleteBrand);
 
 // router.post('/', validateBrandData, brandController.createBrand);
 // router.put('/:id', validateBrandData, brandController.updateBrand);
-// router.delete('/:id', brandController.deleteBrand);
 
 module.exports = router;

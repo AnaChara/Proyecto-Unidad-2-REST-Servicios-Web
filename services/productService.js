@@ -13,9 +13,6 @@ module.exports = {
 
     getProductById: async (_id) => {
         try {
-            if (!_id) {
-                throw new Error('ID de producto es obligatorio.');
-            }
             const product = await Product.findById(_id);
             if (!product) {
                 throw new Error(`Producto con ID: ${_id} no encontrado.`);
@@ -46,9 +43,6 @@ module.exports = {
 
     updateProduct: async (_id, updates) => {
         try {
-            if (!_id) {
-                throw new Error('ID de producto es obligatorio.');
-            }
             const product = await Product.findById(_id);
             if (!product) {
                 throw new Error(`Producto con ID: ${_id} no encontrado.`);
@@ -67,9 +61,6 @@ module.exports = {
 
     deleteProduct: async (_id) => {
         try {
-            if (!_id) {
-                throw new Error('ID de producto es obligatorio.');
-            }
             const product = await Product.findById(_id);
             if (!product) {
                 throw new Error(`Producto con ID: ${_id} no encontrado.`);
@@ -82,7 +73,7 @@ module.exports = {
         }
     },
 
-    getBrandById: async (brandId) => {
-        return await Brand.findById(brandId);
-    }
+    // getBrandById: async (brandId) => {
+    //     return await Brand.findById(brandId);
+    // }
 };

@@ -10,9 +10,6 @@ module.exports = {
     },
     getBrandById: async (_id) => {
         try {
-            if (!_id) {
-                throw new Error('ID de marca es obligatorio.');
-            }
             const brand = await Brand.findById(_id);
             if (!brand) {
                 throw new Error(`Marca con ID: ${_id} no encontrada.`);
@@ -36,9 +33,6 @@ module.exports = {
     },
     updateBrand: async (_id, updates) => {
         try {
-            if (!_id) {
-                throw new Error('ID de marca es obligatorio.');
-            }
             const updatedBrand = await Brand.findByIdAndUpdate(_id, updates, { new: true });
             if (!updatedBrand) {
                 throw new Error(`Marca con ID: ${_id} no encontrada.`);
@@ -50,9 +44,6 @@ module.exports = {
     },
     deleteBrand: async (_id) => {
         try {
-            if (!_id) {
-                throw new Error('ID de marca es obligatorio.');
-            }
             const deletedBrand = await Brand.findByIdAndDelete(_id);
             if (!deletedBrand) {
                 throw new Error(`Marca con ID: ${_id} no encontrada.`);
