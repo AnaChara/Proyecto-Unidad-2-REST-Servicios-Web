@@ -26,9 +26,9 @@ const getUserById = async (req, res) => {
 };
 
 const createUser = async (req, res) => {
-  const { nombreCompleto, email, password, RFC, direccion, zipCode, telefono, metodoPagoPreferido, facturapi } = req.body;
-  if (!nombreCompleto ||!email ||!password ||!RFC ||!direccion ||!zipCode ||!telefono ||!metodoPagoPreferido) {
-    return res.status(400).json({ message: 'Todos los campos son obligatorios.' });
+  const { nombreCompleto, email, password, RFC, direccion, zipCode, telefono, tipoUsuario, metodoPagoPreferido, facturapi } = req.body;
+  if (!nombreCompleto || !email || !password || !RFC || !direccion || !zipCode || !telefono || !tipoUsuario || !metodoPagoPreferido) {
+    return res.status(400).json({ message: 'Todos los campos son obligatorios..' });
   }
   try {
     const existingUser = await User.findOne({ email });

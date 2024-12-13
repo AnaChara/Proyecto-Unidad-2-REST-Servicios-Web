@@ -24,7 +24,7 @@ const getProductById = async (req, res) => {
 
 const createProduct = async (req, res) => {
   const { name, desc, price, category, brand, quantity, images, facturapi } = req.body;
-  if (!name || !desc || !price || !category || !brand || !quantity || !images || !facturapi) {
+  if (!name || !desc || !price || !category || !brand || !quantity || !images ) {
     return res.status(400).json({ message: 'Todos los campos son obligatorios.' });
   }
   try {

@@ -24,7 +24,7 @@ module.exports = {
 
     createUser: async ({ nombreCompleto, email, password, RFC, direccion, zipCode, telefono, fechaRegistro, tipoUsuario, metodoPagoPreferido }) => {
         try {
-            if (!nombreCompleto || !email || !password || !RFC || !direccion || !zipCode || !telefono || !fechaRegistro || !tipoUsuario || !metodoPagoPreferido) {
+            if (!nombreCompleto || !email || !password || !RFC || !direccion || !zipCode || !telefono || !metodoPagoPreferido) {
                 throw new Error('Todos los campos son obligatorios.');
             }
             const user = new User({ nombreCompleto, email, password, RFC, direccion, zipCode, telefono, fechaRegistro, tipoUsuario, metodoPagoPreferido });
