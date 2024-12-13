@@ -4,8 +4,7 @@ const facturapi = require('../apis/facturapi');
 const user = require('../models/userModel');
 // const accountSid = process.env.TULIOKEY1;
 // const authToken = process.env.TULIOKEY2;
-// console.log('AccountSid: ', accountSid);
-// console.log('authToken: ', authToken);
+const stripe = require('../apis/stripe');
 // const client = require('twilio')(accountSid, authToken);
 const Mailjet = require('node-mailjet');
 const { createPDFAndUploadToS3 } = require('../apis/generarPDF');
@@ -17,7 +16,6 @@ const mailjet = Mailjet.apiConnect(
         options: {}
     }
 );
-const { send } = require('../apis/mailjet');
 
 module.exports = {
     getAllCarts: async () => {
@@ -75,6 +73,8 @@ module.exports = {
 
         // Generar recibo y PDF
         const [facturapipi, factuPDF] = await facturapi.createReceipt(cart, userName);
+
+        const linkPago = await stripe.paymentLink(cart.productos);
 
         const productDetailsHTML = cart.productos
             .map(item => `
@@ -252,6 +252,24 @@ module.exports = {
         cart.total -= product.price * cart.productos[itemIndex].quantity;
         cart.productos.splice(itemIndex, 1);
 
+        return await cart.save();
+    },
+    removeOneItemFromCart: async (cartId, productId) => {
+        const cart = await shCart.findById(cartId);
+        if (!cart) throw new Error('Carrito no encontrado.');
+
+        const itemIndex = cart.productos.findIndex(item => item.product.equals(productId));
+        if (itemIndex === -1) throw new Error('Producto no encontrado en el carrito.');
+
+        if (itemIndex) {
+            if(cart.productos[itemIndex].quantity == 0){
+                cart.productos.splice(itemIndex, 1);
+            }
+            cart.productos[itemIndex].quantity -= cart.productos[itemIndex].quantity;
+        }
+
+        const product = await Product.findById(productId);
+        cart.total -= product.price * cart.productos[itemIndex].quantity;
         return await cart.save();
     },
     clearCart: async (userId) => {

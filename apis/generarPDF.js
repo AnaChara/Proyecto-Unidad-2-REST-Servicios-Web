@@ -1,5 +1,4 @@
 require('dotenv').config();
-const puppeteer = require('puppeteer');
 const AWS = require('aws-sdk');
 const fs = require('fs');
 const path = require('path');
@@ -16,7 +15,6 @@ async function createPDFAndUploadToS3(facturapipi, productDetailsHTML, adInfo1, 
     const pdfPath = path.join(__dirname, 'invoice.pdf');
 
     try {
-        const browser = await puppeteer.launch();
         const page = await browser.newPage();
 
         const fullHTML = `
@@ -59,8 +57,6 @@ async function createPDFAndUploadToS3(facturapipi, productDetailsHTML, adInfo1, 
         await page.setContent(fullHTML);
 
         await page.pdf({ path: pdfPath, format: 'A4' });
-
-        await browser.close();
 
         const fileContent = fs.readFileSync(pdfPath);
 

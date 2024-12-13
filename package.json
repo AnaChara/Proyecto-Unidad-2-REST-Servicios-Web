@@ -19,7 +19,6 @@
     "jsonwebtoken": "^9.0.2",
     "mongoose": "^8.8.4",
     "node": "^20.18.1",
-    "node-mailjet": "^6.0.6",
-    "puppeteer": "^23.10.2"
+    "node-mailjet": "^6.0.6"
   }
 }
