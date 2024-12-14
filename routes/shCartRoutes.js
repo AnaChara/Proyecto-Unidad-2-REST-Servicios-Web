@@ -9,9 +9,9 @@ router.post('/', cartController.createCart);
 router.put('/:id', cartController.updateCart);
 router.delete('/:id', cartController.deleteCart);
 router.post('/cart/:id/items', cartController.addItemToCart);
-router.put('/cart/:id/items', cartController.updateCartItem);
-router.delete('/user/:user/item/:id', cartController.deleteItemFromCart);
-router.delete('/user/:user/Oneitem/:id', cartController.deleteOneItemFromCart);
+router.put('/cart/:id/item', cartController.updateCartItem);
+router.delete('/:id/product/:product', cartController.deleteItemFromCart);
+router.delete('/:id/item/:product', cartController.deleteOneItemFromCart);
 router.delete('/items/:user', cartController.clearCart);
 
 module.exports = router;

@@ -96,9 +96,9 @@ const updateCartItem = async (req, res) => {
 };
 
 const deleteItemFromCart = async (req, res) => {
-  const { user, id } = req.params;
+  const { id, product } = req.params;
   try {
-    const updatedCart = await shCartService.deleteItemFromCart(user, id);
+    const updatedCart = await shCartService.deleteItemFromCart(id, product);
     res.status(200).json({ message: 'Producto eliminado exitosamente en el carrito.', updatedCart });
   } catch (error) {
     res.status(400).json({ message: 'Error al eliminar el producto en el carrito.', error: error.message });
@@ -106,9 +106,9 @@ const deleteItemFromCart = async (req, res) => {
 };
 
 const deleteOneItemFromCart = async (req, res) => {
-  const { user, id } = req.params;
+  const { id, product} = req.params;
   try {
-    const updatedCart = await shCartService.removeOneItemFromCart(user, id);
+    const updatedCart = await shCartService.removeOneItemFromCart(id, product);
     res.status(200).json({ message: 'Producto eliminado exitosamente en el carrito.', updatedCart });
   } catch (error) {
     res.status(400).json({ message: 'Error al eliminar el producto en el carrito.', error: error.message });

@@ -7,7 +7,6 @@ const user = require('../models/userModel');
 const stripe = require('../apis/stripe');
 // const client = require('twilio')(accountSid, authToken);
 const Mailjet = require('node-mailjet');
-const { createPDFAndUploadToS3 } = require('../apis/generarPDF');
 const mailjet = Mailjet.apiConnect(
     '3b760fe4c13feee204be42974e6bb8b9',
     '5979e9ac6662776169c77f7b1b6b25f4',
@@ -108,12 +107,9 @@ module.exports = {
         const adInfo1 = cart.total.toFixed(2);
         const adInfo2 = cart.cDate;
 
-        const pdfUrl = await createPDFAndUploadToS3(facturapipi, productDetailsHTML, adInfo1, adInfo2);
-        console.log('PDF available at:', pdfUrl);
 
         const fullHtmlContent = `
             ${htmlContent}
-            <p>${pdfUrl}</p>
             <p>PDF de Facturapi: ${factuPDF[0]}</p>
             <p>XML de Facturapi: ${factuPDF[1]}</p>
         `;
@@ -167,8 +163,6 @@ module.exports = {
         ${productosPalMensaje}
     
         For any questions, feel free to contact us.
-        Checkout your purchase PDF at: 
-        ${pdfUrl}
     
         Checkout your purchase PDF from Facturapi at: 
         ${factuPDF[0]}
@@ -241,9 +235,9 @@ module.exports = {
 
         return await cart.save();
     },
-    deleteItemFromCart: async (userId, productId) => {
-        const cart = await shCart.findOne({ user: userId });
-        if (!cart) throw new Error(`Carrito del usuario: ${userId} no encontrado.`);
+    deleteItemFromCart: async (cartId, productId) => {
+        const cart = await shCart.findById(cartId);
+        if (!cart) throw new Error(`Carrito con ID: ${cartId} no encontrado.`);
 
         const itemIndex = cart.productos.findIndex(item => item.product.equals(productId));
         if (itemIndex === -1) throw new Error('Producto no encontrado en el carrito.');
@@ -256,20 +250,20 @@ module.exports = {
     },
     removeOneItemFromCart: async (cartId, productId) => {
         const cart = await shCart.findById(cartId);
-        if (!cart) throw new Error('Carrito no encontrado.');
+        if (!cart) throw new Error(`Carrito con ID: ${cartId} no encontrado.`);
 
         const itemIndex = cart.productos.findIndex(item => item.product.equals(productId));
         if (itemIndex === -1) throw new Error('Producto no encontrado en el carrito.');
 
-        if (itemIndex) {
+        if (itemIndex !== -1) {
             if(cart.productos[itemIndex].quantity == 0){
                 cart.productos.splice(itemIndex, 1);
             }
-            cart.productos[itemIndex].quantity -= cart.productos[itemIndex].quantity;
+            cart.productos[itemIndex].quantity -= 1;
         }
 
         const product = await Product.findById(productId);
-        cart.total -= product.price * cart.productos[itemIndex].quantity;
+        cart.total -= product.price;
         return await cart.save();
     },
     clearCart: async (userId) => {
